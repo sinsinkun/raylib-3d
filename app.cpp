@@ -1,0 +1,119 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <raylib.h>
+#include "app.hpp"
+#include "util.hpp"
+
+#define GLSL_VERSION 330
+
+using namespace App;
+
+void EventLoop::init() {
+  // initialize font
+  font = LoadFontEx("assets/roboto.ttf", 60, 0, 0);
+  // Generate mipmap levels to use bi/trilinear filtering
+  GenTextureMipmaps(&font.texture);
+  SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
+
+  // initialize camera
+  camera.position = (Vector3){ 10.0f, 6.0f, 0.0f };
+  camera.target = (Vector3){0.0f, 0.0f, 0.0f};
+  camera.up = (Vector3){0.0f, 1.0f, 0.0f};
+  camera.fovy = 80.0f;
+  camera.projection = CAMERA_PERSPECTIVE;
+
+  // initialize shader
+  shader = LoadShader(0, TextFormat("assets/shadow.frag", GLSL_VERSION));
+}
+
+void EventLoop::update() {
+  _updateSystem();
+  // take inputs
+  int mouseHoverCount = 0;
+  bool mouseClicked = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
+
+  // rotate camera
+  int rotDir = 0;
+  if (IsKeyDown(KEY_A)) rotDir = 1;
+  if (IsKeyDown(KEY_D)) rotDir = -1;
+  if (rotDir != 0) {
+    Vector2 nPos = Util::rotatePointOrigin(camera.position.x, camera.position.z, rotDir * 0.02f);
+    camera.position.x = nPos.x;
+    camera.position.z = nPos.y;
+  }
+
+  // update assets
+  for (Asset a: assets) {
+    switch (a.type) {
+      case AssetType::ANone:
+      default:
+        break;
+    }
+  }
+  // update mouse state
+  if (mouseHoverCount > 0) SetMouseCursor(MOUSE_CURSOR_POINTING_HAND);
+  else SetMouseCursor(MOUSE_CURSOR_ARROW);
+}
+
+void EventLoop::render() {
+  BeginDrawing();
+    ClearBackground(BLACK);
+    if (IsWindowFocused()) {
+      // draw background
+      DrawRectangle(0, 0, screenW, screenH, (Color){80, 120, 120, 255});
+
+      BeginMode3D(camera);
+        BeginShaderMode(shader);
+          DrawCube((Vector3){0.0f, 2.0f, 0.0f}, 4.0f, 4.0f, 4.0f, BLUE);
+        EndShaderMode();
+        // Debug
+        DrawGrid(10, 1.0f);
+      EndMode3D();
+
+      // draw assets
+      for (Asset a: assets) {
+        switch (a.type) {
+          case AssetType::ANone:
+          default:
+            break;
+        }
+      }
+
+    } else {
+      DrawText("Pay Attention to me", screenCenter.x - 170, screenCenter.y - 40, 34, RED);
+    }
+    // draw FPS overlay
+    _drawFps();
+  EndDrawing();
+}
+
+void EventLoop::cleanup() {
+  // destroy assets
+  for (Asset a: assets) {
+    switch (a.type) {
+      case AssetType::ANone:
+      default:
+        break;
+    }
+  }
+  UnloadShader(shader);
+  UnloadFont(font);
+}
+
+void EventLoop::_updateSystem() {
+  fps = GetFPS();
+  screenW = GetScreenWidth();
+  screenH = GetScreenHeight();
+  elapsed = GetTime();
+  screenCenter = { (float)screenW/2, (float)screenH/2 };
+  mousePos = GetMousePosition();
+  deltaTime = GetFrameTime();
+}
+
+void EventLoop::_drawFps() {
+  std::string fpst = std::to_string(fps);
+  std::string fpstxt = "FPS: ";
+  fpstxt.append(fpst);
+  DrawTextEx(font, fpstxt.c_str(), (Vector2){2.0, 2.0}, 20, 0, GREEN);
+}
