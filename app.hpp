@@ -1,13 +1,19 @@
 #include <vector>
 #include <raylib.h>
+#include "shaded.hpp"
 
 namespace App {
-  // enum AssetType {
-  //   ANone,
-  // };
-  // struct Asset {
-  //   AssetType type = AssetType::ANone;
-  // };
+  enum AssetType {
+    Asset_None,
+    Asset_ShadedModel,
+  };
+  struct Asset {
+    Asset(AssetType itype) {
+      type = itype;
+    }
+    AssetType type = Asset_None;
+    ShadedModel* sm;
+  };
 
   class EventLoop {
     public:
@@ -20,10 +26,15 @@ namespace App {
       double elapsed = 0.0;
       Vector2 mousePos = { 0.0, 0.0 };
       // memory
+      Model model;
+      Shader shader;
+      Vector3 pos = {0.0f, 0.0f, 0.0f};
+      int shaderLoc[5];
+      float lightC[3] = {0.4f, 0.4f, 0.5f}; // normalized
+      float lightDir[3] = {5.0f, 10.0f, 1.0f};
       Camera camera = { 0 }; //3D camera
       Font font;
-      Shader shader;
-      // std::vector<Asset> assets;
+      std::vector<Asset> assets;
       // methods
       void init();
       void update();

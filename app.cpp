@@ -2,8 +2,10 @@
 #include <string>
 #include <vector>
 #include <raylib.h>
+#include <raymath.h>
 #include "app.hpp"
 #include "util.hpp"
+#include "shaded.hpp"
 
 #define GLSL_VERSION 330
 
@@ -20,11 +22,20 @@ void EventLoop::init() {
   camera.position = (Vector3){ 10.0f, 6.0f, 0.0f };
   camera.target = (Vector3){0.0f, 0.0f, 0.0f};
   camera.up = (Vector3){0.0f, 1.0f, 0.0f};
-  camera.fovy = 80.0f;
+  camera.fovy = 60.0f;
   camera.projection = CAMERA_PERSPECTIVE;
 
-  // initialize shader
-  shader = LoadShader(0, TextFormat("assets/lighting.fs", GLSL_VERSION));
+  // initialize shadeded asset
+  shader = LoadShader("assets/lighting.vs", "assets/lighting.fs");
+  model = LoadModelFromMesh(GenMeshCube(4.0f, 4.0f, 4.0f));
+  model.materials[0].shader = shader;
+  
+  // setup shader variable references
+  shaderLoc[0] = GetShaderLocation(shader, "model");
+  shaderLoc[1] = GetShaderLocation(shader, "view");
+  shaderLoc[2] = GetShaderLocation(shader, "projection");
+  shaderLoc[3] = GetShaderLocation(shader, "lightColor");
+  shaderLoc[4] = GetShaderLocation(shader, "lightDir");
 }
 
 void EventLoop::update() {
@@ -46,13 +57,26 @@ void EventLoop::update() {
   if (IsKeyDown(KEY_S) && camera.position.y > -5.0f) camera.position.y -= 0.1f;
 
   // update assets
-  // for (Asset a: assets) {
-  //   switch (a.type) {
-  //     case AssetType::ANone:
-  //     default:
-  //       break;
-  //   }
-  // }
+  for (Asset a: assets) {
+    switch (a.type) {
+      case Asset_ShadedModel:
+        a.sm->update(camera, screenW, screenH, camera.fovy);
+        break;
+      case Asset_None:
+      default:
+        break;
+    }
+  }
+
+  // update shader variables
+  Matrix modelPos = MatrixTranslate(0.0f, 2.0f, 0.0f);
+  Matrix viewPos = GetCameraMatrix(camera);
+  Matrix projection = MatrixPerspective(1.0472, (float)screenW/(float)screenH, 0.1f, 1000.0f);
+  SetShaderValueMatrix(shader, shaderLoc[0], modelPos);
+  SetShaderValueMatrix(shader, shaderLoc[1], viewPos);
+  SetShaderValueMatrix(shader, shaderLoc[2], projection);
+  SetShaderValue(shader, shaderLoc[3], lightC, SHADER_UNIFORM_VEC3);
+  SetShaderValue(shader, shaderLoc[4], lightDir, SHADER_UNIFORM_VEC3);
 
   // update mouse state
   if (mouseHoverCount > 0) SetMouseCursor(MOUSE_CURSOR_POINTING_HAND);
@@ -67,23 +91,23 @@ void EventLoop::render() {
       DrawRectangle(0, 0, screenW, screenH, (Color){80, 120, 120, 255});
 
       BeginMode3D(camera);
-        BeginShaderMode(shader);
-          DrawCube((Vector3){0.0f, 2.0f, 0.0f}, 4.0f, 4.0f, 4.0f, RED);
-        EndShaderMode();
+        // draw assets
+        for (Asset a: assets) {
+          switch (a.type) {
+            case Asset_ShadedModel:
+              a.sm->render();
+              break;
+            case Asset_None:
+            default:
+              break;
+          }
+        }
+        DrawModel(model, (Vector3){0.0f, 0.0f, 0.0f}, 1.0f, WHITE);
         // Debug
         DrawCubeWires((Vector3){0.0f, 2.0f, 0.0f}, 4.0f, 4.0f, 4.0f, WHITE);
         DrawSphere((Vector3){5.0f, 0.0f, 0.0f}, 0.1f, GREEN);
         DrawGrid(10, 1.0f);
       EndMode3D();
-
-      // draw assets
-      // for (Asset a: assets) {
-      //   switch (a.type) {
-      //     case AssetType::ANone:
-      //     default:
-      //       break;
-      //   }
-      // }
 
     } else {
       DrawText("Pay Attention to me", screenCenter.x - 170, screenCenter.y - 40, 34, RED);
@@ -95,13 +119,19 @@ void EventLoop::render() {
 
 void EventLoop::cleanup() {
   // destroy assets
-  // for (Asset a: assets) {
-  //   switch (a.type) {
-  //     case AssetType::ANone:
-  //     default:
-  //       break;
-  //   }
-  // }
+  for (Asset a: assets) {
+    switch (a.type) {
+      case Asset_ShadedModel:
+        a.sm->cleanup();
+        delete a.sm;
+        break;
+      case Asset_None:
+      default:
+        break;
+    }
+  }
+  assets.clear();
+  UnloadModel(model);
   UnloadShader(shader);
   UnloadFont(font);
 }
