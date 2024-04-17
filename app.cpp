@@ -24,7 +24,7 @@ void EventLoop::init() {
   camera.projection = CAMERA_PERSPECTIVE;
 
   // initialize shader
-  shader = LoadShader(0, TextFormat("assets/shadow.frag", GLSL_VERSION));
+  shader = LoadShader(0, TextFormat("assets/lighting.fs", GLSL_VERSION));
 }
 
 void EventLoop::update() {
@@ -42,15 +42,18 @@ void EventLoop::update() {
     camera.position.x = nPos.x;
     camera.position.z = nPos.y;
   }
+  if (IsKeyDown(KEY_W) && camera.position.y < 10.0f) camera.position.y += 0.1f;
+  if (IsKeyDown(KEY_S) && camera.position.y > -5.0f) camera.position.y -= 0.1f;
 
   // update assets
-  for (Asset a: assets) {
-    switch (a.type) {
-      case AssetType::ANone:
-      default:
-        break;
-    }
-  }
+  // for (Asset a: assets) {
+  //   switch (a.type) {
+  //     case AssetType::ANone:
+  //     default:
+  //       break;
+  //   }
+  // }
+
   // update mouse state
   if (mouseHoverCount > 0) SetMouseCursor(MOUSE_CURSOR_POINTING_HAND);
   else SetMouseCursor(MOUSE_CURSOR_ARROW);
@@ -65,20 +68,22 @@ void EventLoop::render() {
 
       BeginMode3D(camera);
         BeginShaderMode(shader);
-          DrawCube((Vector3){0.0f, 2.0f, 0.0f}, 4.0f, 4.0f, 4.0f, BLUE);
+          DrawCube((Vector3){0.0f, 2.0f, 0.0f}, 4.0f, 4.0f, 4.0f, RED);
         EndShaderMode();
         // Debug
+        DrawCubeWires((Vector3){0.0f, 2.0f, 0.0f}, 4.0f, 4.0f, 4.0f, WHITE);
+        DrawSphere((Vector3){5.0f, 0.0f, 0.0f}, 0.1f, GREEN);
         DrawGrid(10, 1.0f);
       EndMode3D();
 
       // draw assets
-      for (Asset a: assets) {
-        switch (a.type) {
-          case AssetType::ANone:
-          default:
-            break;
-        }
-      }
+      // for (Asset a: assets) {
+      //   switch (a.type) {
+      //     case AssetType::ANone:
+      //     default:
+      //       break;
+      //   }
+      // }
 
     } else {
       DrawText("Pay Attention to me", screenCenter.x - 170, screenCenter.y - 40, 34, RED);
@@ -90,13 +95,13 @@ void EventLoop::render() {
 
 void EventLoop::cleanup() {
   // destroy assets
-  for (Asset a: assets) {
-    switch (a.type) {
-      case AssetType::ANone:
-      default:
-        break;
-    }
-  }
+  // for (Asset a: assets) {
+  //   switch (a.type) {
+  //     case AssetType::ANone:
+  //     default:
+  //       break;
+  //   }
+  // }
   UnloadShader(shader);
   UnloadFont(font);
 }

@@ -2,19 +2,16 @@
 #include <raylib.h>
 
 namespace App {
-  enum AssetType {
-    ANone,
-  };
-  struct Asset {
-    AssetType type = AssetType::ANone;
-  };
+  // enum AssetType {
+  //   ANone,
+  // };
+  // struct Asset {
+  //   AssetType type = AssetType::ANone;
+  // };
 
   class EventLoop {
     public:
       // global states
-      Camera camera = { 0 }; //3D camera
-      Shader shader;
-      Font font;
       int screenW = 0;
       int screenH = 0;
       Vector2 screenCenter = { 0.0, 0.0 };
@@ -23,7 +20,10 @@ namespace App {
       double elapsed = 0.0;
       Vector2 mousePos = { 0.0, 0.0 };
       // memory
-      std::vector<Asset> assets;
+      Camera camera = { 0 }; //3D camera
+      Font font;
+      Shader shader;
+      // std::vector<Asset> assets;
       // methods
       void init();
       void update();
