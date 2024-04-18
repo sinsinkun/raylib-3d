@@ -75,7 +75,7 @@ void EventLoop::render() {
     ClearBackground(BLACK);
     if (IsWindowFocused()) {
       // draw background
-      DrawRectangle(0, 0, screenW, screenH, (Color){80, 120, 120, 255});
+      DrawRectangle(0, 0, screenW, screenH, (Color){40, 40, 60, 255});
 
       BeginMode3D(camera);
         // draw assets
@@ -92,7 +92,7 @@ void EventLoop::render() {
         // Debug
         // DrawCubeWires((Vector3){0.0f, 2.0f, 0.0f}, 4.0f, 4.0f, 4.0f, WHITE);
         // DrawSphere((Vector3){5.0f, 0.0f, 0.0f}, 0.1f, GREEN);
-        DrawGrid(10, 1.0f);
+        // DrawGrid(10, 1.0f);
       EndMode3D();
 
     } else {

@@ -9,7 +9,8 @@ namespace App {
       Model model;
       Shader shader;
       Vector3 pos = {0.0f, 0.0f, 0.0f};
-      int shaderLoc[5];
+      int shaderLoc[6];
+      float albedo[3] = {0.5f, 0.0f, 0.0f}; // normalized
       float lightC[3] = {0.4f, 0.4f, 0.5f}; // normalized
       float lightDir[3] = {7.0f, 10.0f, 3.0f};
       // methods
