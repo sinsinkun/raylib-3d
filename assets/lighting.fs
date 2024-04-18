@@ -14,12 +14,13 @@ out vec4 finalColor;
 
 void main() {
 	// calculate ambient color
-	vec3 ambientColor = 0.2 * albedo;
+	float ambience = 0.2;
+	float attenuation = 0.9;
 	// calculate diffused color
-	float diffuse = clamp(-0.1, dot(vertNormal, normalize(lightDir)), 0.8);
-	vec3 diffuseColor = diffuse * lightColor * albedo;
+	float diffuse = max(dot(vertNormal, normalize(lightDir)), -0.1);
+	vec3 diffuseColor = diffuse * lightColor;
 	// combine ambient + diffused light
-	vec3 outColor = ambientColor + diffuseColor;
+	vec3 outColor = albedo * ambience + attenuation * albedo * diffuseColor;
 	// clamp to shade bands
 	outColor.r = outColor.r * floor(outColor.r/0.1);
 	outColor.g = outColor.g * floor(outColor.g/0.1);

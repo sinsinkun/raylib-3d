@@ -34,6 +34,26 @@ void EventLoop::init() {
   a1.sm->albedo = {255, 140, 140};
   a1.sm->init(m, s);
   assets.push_back(a1);
+
+  // asset 2
+  Asset a2 = { Asset_ShadedModel };
+  a2.sm = new ShadedModel;
+  Model m2 = LoadModelFromMesh(GenMeshCube(2.0f, 2.0f, 2.0f));
+  Shader s2 = LoadShader("assets/lighting.vs", "assets/lighting.fs");
+  a2.sm->pos = (Vector3){0.0f, 2.0f, 5.0f};
+  a2.sm->albedo = {140, 255, 140};
+  a2.sm->init(m2, s2);
+  assets.push_back(a2);
+
+  // asset 3
+  Asset a3 = { Asset_ShadedModel };
+  a3.sm = new ShadedModel;
+  Model m3 = LoadModelFromMesh(GenMeshSphere(2.0f, 40, 40));
+  Shader s3 = LoadShader("assets/lighting.vs", "assets/lighting.fs");
+  a3.sm->pos = (Vector3){0.0f, 2.0f, -5.0f};
+  a3.sm->albedo = {140, 120, 255};
+  a3.sm->init(m3, s3);
+  assets.push_back(a3);
 }
 
 void EventLoop::update() {
@@ -41,6 +61,7 @@ void EventLoop::update() {
   // take inputs
   int mouseHoverCount = 0;
   bool mouseClicked = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
+  float ftime = GetFrameTime();
 
   // rotate camera
   int rotDir = 0;
@@ -59,8 +80,9 @@ void EventLoop::update() {
     switch (a.type) {
       case Asset_ShadedModel:
         a.sm->updateModel(
-          (Vector3){0.0f, (float)std::sin(elapsed), 0.0f},
-          (Vector3){0.0f, (float)elapsed * 30.0f, 0.0f}
+          (Vector3){0.0f, 0.0f, 0.0f},
+          (Vector3){0.0f, ftime * 12.0f, 0.0f},
+          (Vector3){5.0f * (float)std::sin(elapsed), 10.0f, 5.0f * (float)std::cos(elapsed)}
         );
         a.sm->updateShader(camera, screenW, screenH, camera.fovy);
         break;
