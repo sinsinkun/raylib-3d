@@ -28,9 +28,10 @@ void EventLoop::init() {
   // initialize shadeded asset
   Asset a1 = { Asset_ShadedModel };
   a1.sm = new ShadedModel;
-  Model m = LoadModelFromMesh(GenMeshCube(4.0f, 4.0f, 4.0f));
+  Model m = LoadModelFromMesh(GenMeshCone(2.0f, 2.0f, 40));
   Shader s = LoadShader("assets/lighting.vs", "assets/lighting.fs");
   a1.sm->pos = (Vector3){0.0f, 2.0f, 0.0f};
+  a1.sm->albedo = {255, 140, 140};
   a1.sm->init(m, s);
   assets.push_back(a1);
 }
@@ -58,8 +59,8 @@ void EventLoop::update() {
     switch (a.type) {
       case Asset_ShadedModel:
         a.sm->updateModel(
-          (Vector3){0.0f, (float)std::sin(elapsed * 2.0), 0.0f},
-          (Vector3){0.0f, (float)elapsed * 30.0f, 30.0f}
+          (Vector3){0.0f, (float)std::sin(elapsed), 0.0f},
+          (Vector3){0.0f, (float)elapsed * 30.0f, 0.0f}
         );
         a.sm->updateShader(camera, screenW, screenH, camera.fovy);
         break;
