@@ -26,12 +26,6 @@ namespace App {
       double elapsed = 0.0;
       Vector2 mousePos = { 0.0, 0.0 };
       // memory
-      Model model;
-      Shader shader;
-      Vector3 pos = {0.0f, 0.0f, 0.0f};
-      int shaderLoc[5];
-      float lightC[3] = {0.4f, 0.4f, 0.5f}; // normalized
-      float lightDir[3] = {5.0f, 10.0f, 1.0f};
       Camera camera = { 0 }; //3D camera
       Font font;
       std::vector<Asset> assets;

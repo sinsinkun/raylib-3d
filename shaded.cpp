@@ -5,7 +5,9 @@
 
 using namespace App;
 
-void ShadedModel::init() {
+void ShadedModel::init(Model m, Shader s) {
+  model = m;
+  shader = s;
   model.materials[0].shader = shader;
   
   // setup shader variable references
@@ -20,7 +22,9 @@ void ShadedModel::update(const Camera& camera, int screenW, int screenH, float f
   // convert fovY to rad
   float fovRad = fovY * 3.141592f / 180.0f;
   // update shader variables
-  Matrix modelPos = MatrixTranslate(pos.x, pos.y, pos.z);
+  Matrix transMat = MatrixTranslate(pos.x, pos.y, pos.z);
+  Matrix rotMat = MatrixRotateY(0.3);
+  Matrix modelPos = MatrixMultiply(transMat, rotMat);
   Matrix viewPos = GetCameraMatrix(camera);
   Matrix projection = MatrixPerspective(fovRad, (float)screenW/(float)screenH, 0.01f, 1000.0f);
   SetShaderValueMatrix(shader, shaderLoc[0], modelPos);
@@ -31,12 +35,7 @@ void ShadedModel::update(const Camera& camera, int screenW, int screenH, float f
 }
 
 void ShadedModel::render() {
-  if (IsShaderReady(shader)) {
-    DrawModel(model, (Vector3){0.0f, 0.0f, 0.0f}, 1.0f, WHITE);
-  } else {
-    std::cout << "ERR: shader is not ready" << std::endl;
-    exit(-10);
-  }
+  DrawModel(model, pos, 1.0f, WHITE);
 }
 
 void ShadedModel::cleanup() {

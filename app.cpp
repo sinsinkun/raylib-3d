@@ -26,16 +26,13 @@ void EventLoop::init() {
   camera.projection = CAMERA_PERSPECTIVE;
 
   // initialize shadeded asset
-  shader = LoadShader("assets/lighting.vs", "assets/lighting.fs");
-  model = LoadModelFromMesh(GenMeshCube(4.0f, 4.0f, 4.0f));
-  model.materials[0].shader = shader;
-  
-  // setup shader variable references
-  shaderLoc[0] = GetShaderLocation(shader, "model");
-  shaderLoc[1] = GetShaderLocation(shader, "view");
-  shaderLoc[2] = GetShaderLocation(shader, "projection");
-  shaderLoc[3] = GetShaderLocation(shader, "lightColor");
-  shaderLoc[4] = GetShaderLocation(shader, "lightDir");
+  Asset a1 = { Asset_ShadedModel };
+  a1.sm = new ShadedModel;
+  Model m = LoadModelFromMesh(GenMeshCube(4.0f, 4.0f, 4.0f));
+  Shader s = LoadShader("assets/lighting.vs", "assets/lighting.fs");
+  a1.sm->pos = (Vector3){0.0f, 2.0f, 0.0f};
+  a1.sm->init(m, s);
+  assets.push_back(a1);
 }
 
 void EventLoop::update() {
@@ -68,16 +65,6 @@ void EventLoop::update() {
     }
   }
 
-  // update shader variables
-  Matrix modelPos = MatrixTranslate(0.0f, 2.0f, 0.0f);
-  Matrix viewPos = GetCameraMatrix(camera);
-  Matrix projection = MatrixPerspective(1.0472, (float)screenW/(float)screenH, 0.1f, 1000.0f);
-  SetShaderValueMatrix(shader, shaderLoc[0], modelPos);
-  SetShaderValueMatrix(shader, shaderLoc[1], viewPos);
-  SetShaderValueMatrix(shader, shaderLoc[2], projection);
-  SetShaderValue(shader, shaderLoc[3], lightC, SHADER_UNIFORM_VEC3);
-  SetShaderValue(shader, shaderLoc[4], lightDir, SHADER_UNIFORM_VEC3);
-
   // update mouse state
   if (mouseHoverCount > 0) SetMouseCursor(MOUSE_CURSOR_POINTING_HAND);
   else SetMouseCursor(MOUSE_CURSOR_ARROW);
@@ -102,10 +89,9 @@ void EventLoop::render() {
               break;
           }
         }
-        DrawModel(model, (Vector3){0.0f, 0.0f, 0.0f}, 1.0f, WHITE);
         // Debug
-        DrawCubeWires((Vector3){0.0f, 2.0f, 0.0f}, 4.0f, 4.0f, 4.0f, WHITE);
-        DrawSphere((Vector3){5.0f, 0.0f, 0.0f}, 0.1f, GREEN);
+        // DrawCubeWires((Vector3){0.0f, 2.0f, 0.0f}, 4.0f, 4.0f, 4.0f, WHITE);
+        // DrawSphere((Vector3){5.0f, 0.0f, 0.0f}, 0.1f, GREEN);
         DrawGrid(10, 1.0f);
       EndMode3D();
 
@@ -130,9 +116,6 @@ void EventLoop::cleanup() {
         break;
     }
   }
-  assets.clear();
-  UnloadModel(model);
-  UnloadShader(shader);
   UnloadFont(font);
 }
 
