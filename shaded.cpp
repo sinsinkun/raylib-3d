@@ -29,7 +29,7 @@ void ShadedModel::updateShader(const Camera& camera, int screenW, int screenH, f
   float fovRad = fovY * 3.141592f / 180.0f;
   Vector3 rotRad = {rot.x * 3.141592f / 180.0f, rot.y * 3.141592f / 180.0f, rot.z * 3.141592f / 180.0f};
   Matrix transMat = MatrixTranslate(pos.x, pos.y, pos.z);
-  Matrix rotMat = MatrixRotateXYZ(rot);
+  Matrix rotMat = MatrixRotateXYZ(rotRad);
   Matrix modelPos = MatrixMultiply(rotMat, transMat);
   Matrix viewPos = GetCameraMatrix(camera);
   Matrix projection = MatrixPerspective(fovRad, (float)screenW/(float)screenH, 0.01f, 1000.0f);
