@@ -11,30 +11,38 @@ void ShadedModel::init(Model m, Shader s) {
   model.materials[0].shader = shader;
   
   // setup shader variable references
-  shaderLoc[0] = GetShaderLocation(shader, "model");
-  shaderLoc[1] = GetShaderLocation(shader, "view");
-  shaderLoc[2] = GetShaderLocation(shader, "projection");
-  shaderLoc[3] = GetShaderLocation(shader, "lightColor");
-  shaderLoc[4] = GetShaderLocation(shader, "lightDir");
-  shaderLoc[5] = GetShaderLocation(shader, "albedo");
+  _shaderLoc[0] = GetShaderLocation(shader, "model");
+  _shaderLoc[1] = GetShaderLocation(shader, "view");
+  _shaderLoc[2] = GetShaderLocation(shader, "projection");
+  _shaderLoc[3] = GetShaderLocation(shader, "lightColor");
+  _shaderLoc[4] = GetShaderLocation(shader, "lightDir");
+  _shaderLoc[5] = GetShaderLocation(shader, "albedo");
 }
 
-void ShadedModel::update(const Camera& camera, int screenW, int screenH, float fovY) {
-  double elapsed = GetTime();
-  // convert fovY to rad
+void ShadedModel::updateModel(Vector3 p, Vector3 r) {
+  pos = p;
+  rot = r;
+}
+
+void ShadedModel::updateShader(const Camera& camera, int screenW, int screenH, float fovY) {
+  // update vertex shader
   float fovRad = fovY * 3.141592f / 180.0f;
-  // update shader variables
-  Matrix transMat = MatrixTranslate(pos.x, pos.y + std::cos(elapsed), pos.z + std::sin(elapsed));
-  Matrix rotMat = MatrixRotateXYZ((Vector3){ (float)elapsed*0.5f, (float)elapsed*0.5f, 0.0f });
+  Vector3 rotRad = {rot.x * 3.141592f / 180.0f, rot.y * 3.141592f / 180.0f, rot.z * 3.141592f / 180.0f};
+  Matrix transMat = MatrixTranslate(pos.x, pos.y, pos.z);
+  Matrix rotMat = MatrixRotateXYZ(rot);
   Matrix modelPos = MatrixMultiply(rotMat, transMat);
   Matrix viewPos = GetCameraMatrix(camera);
   Matrix projection = MatrixPerspective(fovRad, (float)screenW/(float)screenH, 0.01f, 1000.0f);
-  SetShaderValueMatrix(shader, shaderLoc[0], modelPos);
-  SetShaderValueMatrix(shader, shaderLoc[1], viewPos);
-  SetShaderValueMatrix(shader, shaderLoc[2], projection);
-  SetShaderValue(shader, shaderLoc[3], lightC, SHADER_UNIFORM_VEC3);
-  SetShaderValue(shader, shaderLoc[4], lightDir, SHADER_UNIFORM_VEC3);
-  SetShaderValue(shader, shaderLoc[5], albedo, SHADER_UNIFORM_VEC3);
+  SetShaderValueMatrix(shader, _shaderLoc[0], modelPos);
+  SetShaderValueMatrix(shader, _shaderLoc[1], viewPos);
+  SetShaderValueMatrix(shader, _shaderLoc[2], projection);
+  // update fragment shader
+  float nlightc[3] = { (float)lightC.r / 255, (float)lightC.g / 255, (float)lightC.b / 255 };
+  float nlightd[3] = { lightD.x, lightD.y, lightD.z };
+  float nalbedo[3] = { (float)albedo.r / 255, (float)albedo.g / 255, (float)albedo.b / 255 };
+  SetShaderValue(shader, _shaderLoc[3], nlightc, SHADER_UNIFORM_VEC3);
+  SetShaderValue(shader, _shaderLoc[4], nlightd, SHADER_UNIFORM_VEC3);
+  SetShaderValue(shader, _shaderLoc[5], nalbedo, SHADER_UNIFORM_VEC3);
 }
 
 void ShadedModel::render() {

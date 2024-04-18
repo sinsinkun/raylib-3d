@@ -57,7 +57,11 @@ void EventLoop::update() {
   for (Asset a: assets) {
     switch (a.type) {
       case Asset_ShadedModel:
-        a.sm->update(camera, screenW, screenH, camera.fovy);
+        a.sm->updateModel(
+          (Vector3){0.0f, (float)std::sin(elapsed * 2.0), 0.0f},
+          (Vector3){0.0f, (float)elapsed, 30.0f}
+        );
+        a.sm->updateShader(camera, screenW, screenH, camera.fovy);
         break;
       case Asset_None:
       default:
