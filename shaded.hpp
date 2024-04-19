@@ -11,7 +11,7 @@ namespace App {
       Vector3 pos = {0.0f, 0.0f, 0.0f};
       Vector3 rot = {0.0f, 0.0f, 0.0f}; // in deg
       Color albedo = {255, 255, 255};
-      Color lightC = {100, 100, 160};
+      Color lightC = {250, 250, 250};
       Vector3 lightD = {1.0f, 5.0f, 3.0f}; // direction, no magnitude
       // methods
       void init(Model m, Shader s);

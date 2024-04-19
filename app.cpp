@@ -19,7 +19,7 @@ void EventLoop::init() {
   SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
 
   // initialize camera
-  camera.position = (Vector3){ 10.0f, 6.0f, 0.0f };
+  camera.position = (Vector3){ 10.0f, 16.0f, 0.0f };
   camera.target = (Vector3){0.0f, 0.0f, 0.0f};
   camera.up = (Vector3){0.0f, 1.0f, 0.0f};
   camera.fovy = 60.0f;
@@ -41,7 +41,7 @@ void EventLoop::init() {
   Model m2 = LoadModelFromMesh(GenMeshCube(2.0f, 2.0f, 2.0f));
   Shader s2 = LoadShader("assets/lighting.vs", "assets/lighting.fs");
   a2.sm->pos = (Vector3){0.0f, 2.0f, 5.0f};
-  a2.sm->albedo = {140, 255, 140};
+  a2.sm->albedo = {140, 200, 150};
   a2.sm->init(m2, s2);
   assets.push_back(a2);
 
@@ -54,6 +54,10 @@ void EventLoop::init() {
   a3.sm->albedo = {140, 120, 255};
   a3.sm->init(m3, s3);
   assets.push_back(a3);
+
+  // post process shader
+  ppShader = LoadShader(0, "assets/postprocess.fs");
+  ppTexture = LoadRenderTexture(800, 600);
 }
 
 void EventLoop::update() {
@@ -72,20 +76,31 @@ void EventLoop::update() {
     camera.position.x = nPos.x;
     camera.position.z = nPos.y;
   }
-  if (IsKeyDown(KEY_W) && camera.position.y < 10.0f) camera.position.y += 0.1f;
-  if (IsKeyDown(KEY_S) && camera.position.y > -5.0f) camera.position.y -= 0.1f;
+  if (IsKeyDown(KEY_W) && camera.position.y < 25.0f) camera.position.y += 0.1f;
+  if (IsKeyDown(KEY_S) && camera.position.y > -10.0f) camera.position.y -= 0.1f;
+
+  // update lights
+  lightPos = {5.0f * (float)std::sin(elapsed), 10.0f, 5.0f * (float)std::cos(elapsed)};
+
+  // update post processor
+  if (ppTexture.texture.width != screenW || ppTexture.texture.height != screenH) {
+    UnloadRenderTexture(ppTexture);
+    ppTexture = LoadRenderTexture(screenW, screenH);
+  }
 
   // update assets
   for (Asset a: assets) {
     switch (a.type) {
-      case Asset_ShadedModel:
+      case Asset_ShadedModel: {
+        Vector3 lightDir = Vector3Subtract(lightPos, a.sm->pos);
         a.sm->updateModel(
           (Vector3){0.0f, 0.0f, 0.0f},
-          (Vector3){0.0f, ftime * 12.0f, 0.0f},
-          (Vector3){5.0f * (float)std::sin(elapsed), 10.0f, 5.0f * (float)std::cos(elapsed)}
+          (Vector3){0.0f, ftime * -12.0f, 0.0f},
+          lightDir
         );
         a.sm->updateShader(camera, screenW, screenH, camera.fovy);
         break;
+      }
       case Asset_None:
       default:
         break;
@@ -98,33 +113,39 @@ void EventLoop::update() {
 }
 
 void EventLoop::render() {
+  // pre-process render
+  BeginTextureMode(ppTexture);
+    ClearBackground((Color){40, 40, 60, 255});
+    
+    BeginMode3D(camera);
+      // draw assets
+      for (Asset a: assets) {
+        switch (a.type) {
+          case Asset_ShadedModel:
+            a.sm->render();
+            break;
+          case Asset_None:
+          default:
+            break;
+        }
+      }
+      // Debug
+      DrawSphere(lightPos, 0.1f, WHITE);
+      // DrawGrid(10, 1.0f);
+    EndMode3D();
+  EndTextureMode();
+
   BeginDrawing();
     ClearBackground(BLACK);
-    if (IsWindowFocused()) {
-      // draw background
-      DrawRectangle(0, 0, screenW, screenH, (Color){40, 40, 60, 255});
-
-      BeginMode3D(camera);
-        // draw assets
-        for (Asset a: assets) {
-          switch (a.type) {
-            case Asset_ShadedModel:
-              a.sm->render();
-              break;
-            case Asset_None:
-            default:
-              break;
-          }
-        }
-        // Debug
-        // DrawCubeWires((Vector3){0.0f, 2.0f, 0.0f}, 4.0f, 4.0f, 4.0f, WHITE);
-        // DrawSphere((Vector3){5.0f, 0.0f, 0.0f}, 0.1f, GREEN);
-        // DrawGrid(10, 1.0f);
-      EndMode3D();
-
-    } else {
-      DrawText("Pay Attention to me", screenCenter.x - 170, screenCenter.y - 40, 34, RED);
-    }
+    // draw post processed texture
+    BeginShaderMode(ppShader);
+      DrawTextureRec(
+        ppTexture.texture, 
+        (Rectangle){0, 0, (float)ppTexture.texture.width, (float)-ppTexture.texture.height},
+        (Vector2){0, 0},
+        WHITE
+      );
+    EndShaderMode();
     // draw FPS overlay
     _drawFps();
   EndDrawing();
@@ -143,6 +164,8 @@ void EventLoop::cleanup() {
         break;
     }
   }
+  UnloadShader(ppShader);
+  UnloadRenderTexture(ppTexture);
   UnloadFont(font);
 }
 

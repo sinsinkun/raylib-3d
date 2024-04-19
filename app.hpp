@@ -29,6 +29,9 @@ namespace App {
       Camera camera = { 0 }; //3D camera
       Font font;
       std::vector<Asset> assets;
+      Vector3 lightPos = {0.0f, 0.0f, 0.0f};
+      Shader ppShader;
+      RenderTexture2D ppTexture;
       // methods
       void init();
       void update();
