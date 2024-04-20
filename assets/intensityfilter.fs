@@ -13,9 +13,7 @@ out vec4 finalColor;
 
 void main() {
   // Texel color fetching from texture sampler
-  vec4 source = texture(texture0, fragTexCoord);
+  vec4 baseColor = texture(texture0, fragTexCoord);
 
-  // Calculate final fragment color
-  finalColor = source;
+  finalColor = step(vec4(0.9), baseColor);
 }
-

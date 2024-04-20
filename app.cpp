@@ -56,8 +56,10 @@ void EventLoop::init() {
   assets.push_back(a3);
 
   // post process shader
-  ppShader = LoadShader(0, "assets/postprocess.fs");
-  ppTexture = LoadRenderTexture(800, 600);
+  intensityShader = LoadShader(0, "assets/intensityFilter.fs");
+  blurShader = LoadShader(0, "assets/blur.fs");
+  blendShader = LoadShader(0, "assets/blend.fs");
+  lightTexture = LoadRenderTexture(800, 600);
 }
 
 void EventLoop::update() {
@@ -83,9 +85,11 @@ void EventLoop::update() {
   lightPos = {5.0f * (float)std::sin(elapsed), 10.0f, 5.0f * (float)std::cos(elapsed)};
 
   // update post processor
-  if (ppTexture.texture.width != screenW || ppTexture.texture.height != screenH) {
-    UnloadRenderTexture(ppTexture);
-    ppTexture = LoadRenderTexture(screenW, screenH);
+  if (preTexture.texture.width != screenW || preTexture.texture.height != screenH) {
+    UnloadRenderTexture(preTexture);
+    preTexture = LoadRenderTexture(screenW, screenH);
+    UnloadRenderTexture(lightTexture);
+    lightTexture = LoadRenderTexture(screenW, screenH);
   }
 
   // update assets
@@ -114,7 +118,7 @@ void EventLoop::update() {
 
 void EventLoop::render() {
   // pre-process render
-  BeginTextureMode(ppTexture);
+  BeginTextureMode(preTexture);
     ClearBackground((Color){40, 40, 60, 255});
     
     BeginMode3D(camera);
@@ -135,17 +139,48 @@ void EventLoop::render() {
     EndMode3D();
   EndTextureMode();
 
-  BeginDrawing();
-    ClearBackground(BLACK);
-    // draw post processed texture
-    BeginShaderMode(ppShader);
+  // filter out only lights
+  BeginTextureMode(lightTexture);
+    BeginShaderMode(intensityShader);
       DrawTextureRec(
-        ppTexture.texture, 
-        (Rectangle){0, 0, (float)ppTexture.texture.width, (float)-ppTexture.texture.height},
+        preTexture.texture, 
+        (Rectangle){0, 0, (float)preTexture.texture.width, (float)-preTexture.texture.height},
         (Vector2){0, 0},
         WHITE
       );
     EndShaderMode();
+  EndTextureMode();
+
+  // blur lights
+  BeginTextureMode(lightTexture);
+    BeginShaderMode(blurShader);
+      DrawTextureRec(
+        lightTexture.texture, 
+        (Rectangle){0, 0, (float)lightTexture.texture.width, (float)-lightTexture.texture.height},
+        (Vector2){0, 0},
+        WHITE
+      );
+    EndShaderMode();
+  EndTextureMode();
+
+  BeginDrawing();
+    ClearBackground(BLACK);
+    // draw post processed texture
+    DrawTextureRec(
+      preTexture.texture, 
+      (Rectangle){0, 0, (float)preTexture.texture.width, (float)-preTexture.texture.height},
+      (Vector2){0, 0},
+      WHITE
+    );
+    // combine light blur for bloom effect
+    BeginBlendMode(BLEND_ADD_COLORS);
+      DrawTextureRec(
+        lightTexture.texture, 
+        (Rectangle){0, 0, (float)lightTexture.texture.width, (float)-lightTexture.texture.height},
+        (Vector2){0, 0},
+        WHITE
+      );
+    EndBlendMode();
     // draw FPS overlay
     _drawFps();
   EndDrawing();
@@ -164,8 +199,11 @@ void EventLoop::cleanup() {
         break;
     }
   }
-  UnloadShader(ppShader);
-  UnloadRenderTexture(ppTexture);
+  UnloadShader(blurShader);
+  UnloadShader(blendShader);
+  UnloadShader(intensityShader);
+  UnloadRenderTexture(preTexture);
+  UnloadRenderTexture(lightTexture);
   UnloadFont(font);
 }
 

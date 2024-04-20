@@ -30,8 +30,11 @@ namespace App {
       Font font;
       std::vector<Asset> assets;
       Vector3 lightPos = {0.0f, 0.0f, 0.0f};
-      Shader ppShader;
-      RenderTexture2D ppTexture;
+      Shader blendShader;
+      Shader blurShader;
+      Shader intensityShader;
+      RenderTexture2D preTexture;
+      RenderTexture2D lightTexture;
       // methods
       void init();
       void update();

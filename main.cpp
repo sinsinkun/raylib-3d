@@ -22,12 +22,12 @@ int main(int argc, char* argv[]) {
   e.init();
 
   // --- EVENT LOOP ---
-  std::cout << "Starting..." << std::endl;
+  std::cout << "\n -- << -- Starting -- >> -- \n" << std::endl;
   while (!WindowShouldClose()) {
     e.update();
     e.render();
   }
-  std::cout << "Exiting..." << std::endl;
+  std::cout << "\n -- << -- Exiting -- >> -- \n" << std::endl;
 
   // --- CLEAN UP ---
   // CloseAudioDevice();
