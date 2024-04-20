@@ -58,7 +58,6 @@ void EventLoop::init() {
   // post process shader
   intensityShader = LoadShader(0, "assets/intensityFilter.fs");
   blurShader = LoadShader(0, "assets/blur.fs");
-  blendShader = LoadShader(0, "assets/blend.fs");
   lightTexture = LoadRenderTexture(800, 600);
 }
 
@@ -81,8 +80,13 @@ void EventLoop::update() {
   if (IsKeyDown(KEY_W) && camera.position.y < 25.0f) camera.position.y += 0.1f;
   if (IsKeyDown(KEY_S) && camera.position.y > -10.0f) camera.position.y -= 0.1f;
 
+  // toggle rotation
+  if (IsKeyPressed(KEY_SPACE)) paused = !paused;
+
   // update lights
-  lightPos = {5.0f * (float)std::sin(elapsed), 10.0f, 5.0f * (float)std::cos(elapsed)};
+  if (!paused) {
+    lightPos = {5.0f * (float)std::sin(elapsed), 6.0f, 5.0f * (float)std::cos(elapsed)};
+  }
 
   // update post processor
   if (preTexture.texture.width != screenW || preTexture.texture.height != screenH) {
@@ -119,7 +123,7 @@ void EventLoop::update() {
 void EventLoop::render() {
   // pre-process render
   BeginTextureMode(preTexture);
-    ClearBackground((Color){40, 40, 60, 255});
+    ClearBackground(BG_CLEAR);
     
     BeginMode3D(camera);
       // draw assets
@@ -200,7 +204,6 @@ void EventLoop::cleanup() {
     }
   }
   UnloadShader(blurShader);
-  UnloadShader(blendShader);
   UnloadShader(intensityShader);
   UnloadRenderTexture(preTexture);
   UnloadRenderTexture(lightTexture);

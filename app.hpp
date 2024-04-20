@@ -3,6 +3,7 @@
 #include "shaded.hpp"
 
 namespace App {
+  const Color BG_CLEAR = {20, 20, 40, 255};
   enum AssetType {
     Asset_None,
     Asset_ShadedModel,
@@ -25,12 +26,12 @@ namespace App {
       float deltaTime = 0.0f;
       double elapsed = 0.0;
       Vector2 mousePos = { 0.0, 0.0 };
+      bool paused = false;
       // memory
       Camera camera = { 0 }; //3D camera
       Font font;
       std::vector<Asset> assets;
-      Vector3 lightPos = {0.0f, 0.0f, 0.0f};
-      Shader blendShader;
+      Vector3 lightPos = {5.0f, 10.0f, 0.0f};
       Shader blurShader;
       Shader intensityShader;
       RenderTexture2D preTexture;
