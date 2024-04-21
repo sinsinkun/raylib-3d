@@ -15,7 +15,7 @@ void ShadedModel::init(Model m, Shader s) {
   _shaderLoc[1] = GetShaderLocation(shader, "view");
   _shaderLoc[2] = GetShaderLocation(shader, "projection");
   _shaderLoc[3] = GetShaderLocation(shader, "lightColor");
-  _shaderLoc[4] = GetShaderLocation(shader, "lightDir");
+  _shaderLoc[4] = GetShaderLocation(shader, "lightPos");
   _shaderLoc[5] = GetShaderLocation(shader, "albedo");
 }
 
@@ -27,7 +27,7 @@ void ShadedModel::updateModel(Vector3 dp, Vector3 dr) {
 void ShadedModel::updateModel(Vector3 dp, Vector3 dr, Vector3 ld) {
   pos = Vector3Add(pos, dp);
   rot = Vector3Add(rot, dr);
-  lightD = ld;
+  lightP = ld;
 }
 
 void ShadedModel::updateShader(const Camera& camera, int screenW, int screenH, float fovY) {
@@ -45,7 +45,7 @@ void ShadedModel::updateShader(const Camera& camera, int screenW, int screenH, f
   SetShaderValueMatrix(shader, _shaderLoc[2], projection);
   // update fragment shader
   float nlightc[3] = { (float)lightC.r / 255, (float)lightC.g / 255, (float)lightC.b / 255 };
-  float nlightd[3] = { lightD.x, lightD.y, lightD.z};
+  float nlightd[3] = { lightP.x, lightP.y, lightP.z};
   float nalbedo[3] = { (float)albedo.r / 255, (float)albedo.g / 255, (float)albedo.b / 255 };
   SetShaderValue(shader, _shaderLoc[3], nlightc, SHADER_UNIFORM_VEC3);
   SetShaderValue(shader, _shaderLoc[4], nlightd, SHADER_UNIFORM_VEC3);

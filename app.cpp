@@ -104,16 +104,10 @@ void EventLoop::update() {
   // update assets
   for (Asset a: assets) {
     switch (a.type) {
-      case Asset_ShadedModel: {
-        Vector3 lightDir = Vector3Subtract(lightPos, a.sm->pos);
-        a.sm->updateModel(
-          (Vector3){0.0f, 0.0f, 0.0f},
-          (Vector3){0.0f, ftime * -12.0f, 0.0f},
-          lightDir
-        );
+      case Asset_ShadedModel:
+        a.sm->updateModel((Vector3){0.0f, 0.0f, 0.0f}, (Vector3){0.0f, ftime * -12.0f, 0.0f}, lightPos);
         a.sm->updateShader(camera, screenW, screenH, camera.fovy);
         break;
-      }
       case Asset_None:
       default:
         break;

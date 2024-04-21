@@ -5,26 +5,37 @@ in vec3 fragColor;
 in vec3 fragNormal;
 in vec2 fragTexCoord;
 
+in vec3 fragPos;
+in vec3 fragLightPos;
+
 uniform vec3 lightColor;
-uniform vec3 lightDir;
 uniform vec3 albedo;
-uniform vec3 viewPos;
 
 // Output fragment color
 out vec4 finalColor;
 
 void main() {
 	// calculate ambient color
-	vec3 ambience = vec3(0.2);
+	vec3 ambience = 0.1 * lightColor;
 
 	// calculate diffused color
-	float attenuation = 0.8;
-	float diffuse = max(dot(fragNormal, normalize(lightDir)), 0.0);
-	vec3 diffuseColor = attenuation * diffuse * lightColor;
+	vec3 nNormal = normalize(fragNormal);
+	vec3 lightDir = normalize(fragLightPos - fragPos);
+	float diffuse = max(dot(nNormal, lightDir), 0.0);
+	vec3 diffuseColor = diffuse * lightColor;
 	// clamp diffuseColor to light bands
-	diffuseColor = floor(diffuseColor * 6)/6;
+	// diffuseColor = floor(diffuseColor * 6)/6;
+
+	// calculate specular color
+	float specularStr = 0.5;
+	vec3 viewDir = normalize(-fragPos);
+	vec3 reflectDir = reflect(-lightDir, nNormal);
+	float specular = pow(max(dot(viewDir, reflectDir), 0.0), 8);
+	vec3 specularColor = specularStr * specular * lightColor;
+	// clamp specularColor to light bands
+	// specularColor = floor(specularColor * 6)/6;
 
 	// combine colors
-	vec3 outColor = (ambience + diffuseColor) * albedo;
+	vec3 outColor = (ambience + diffuseColor + specularColor) * albedo;
 	finalColor = vec4(outColor, 1.0);
 }
