@@ -24,15 +24,15 @@ uniform vec3 lightColor;
 out vec4 finalColor;
 
 // directional light (NOT WORKING: ALWAYS POINTS FROM CAMERA DIRECTION)
-vec3 dLightContribute(vec3 lightColor, vec3 lightD, float intensity) {
+vec3 dLightContribute(vec3 lColor, vec3 lDir, float intensity) {
 	// calculate ambient color
-	vec3 ambientColor = material.ambience * lightColor;
+	vec3 ambientColor = material.ambience * lColor;
 
 	// calculate diffused color
 	vec3 nNormal = normalize(fragNormal);
-	vec3 lightDir = normalize(-lightD);
+	vec3 lightDir = normalize(lDir - fragPos);
 	float diffuse = material.diffusivity * max(dot(nNormal, lightDir), 0.0);
-	vec3 diffuseColor = diffuse * lightColor;
+	vec3 diffuseColor = diffuse * lColor;
 	// clamp diffuseColor to light bands
 	if (material.bands > 1.0) diffuseColor = floor(diffuseColor * material.bands)/material.bands;
 
@@ -42,27 +42,27 @@ vec3 dLightContribute(vec3 lightColor, vec3 lightD, float intensity) {
 		vec3 viewDir = normalize(-fragPos);
 		vec3 reflectDir = reflect(-lightDir, nNormal);
 		float specular = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-		specularColor = material.specularity * specular * lightColor;
+		specularColor = material.specularity * specular * lColor;
 		// clamp specularColor to light bands
 		if (material.bands > 1.0) specularColor = floor(specularColor * material.bands)/material.bands;
 	}
 
-	vec3 outColor = intensity * (ambientColor + diffuseColor) * material.albedo;
+	vec3 outColor = intensity * (ambientColor + diffuseColor + specularColor) * material.albedo;
 	return outColor;
 }
 
 // point light
-vec3 pLightContribute(vec3 lightColor, vec3 lightPos, float attl, float attq) {
-	float lightDistance = length(lightPos - fragPos);
+vec3 pLightContribute(vec3 lColor, vec3 lPos, float attl, float attq) {
+	float lightDistance = length(lPos - fragPos);
 	float attenuation = 1.0 / (1.0 + attl * lightDistance + attq * lightDistance * lightDistance);
 	// calculate ambient color
-	vec3 ambientColor = material.ambience * lightColor;
+	vec3 ambientColor = material.ambience * lColor;
 
 	// calculate diffused color
 	vec3 nNormal = normalize(fragNormal);
-	vec3 lightDir = normalize(lightPos - fragPos);
+	vec3 lightDir = normalize(lPos - fragPos);
 	float diffuse = material.diffusivity * max(dot(nNormal, lightDir), 0.0);
-	vec3 diffuseColor = diffuse * lightColor;
+	vec3 diffuseColor = diffuse * lColor;
 	// clamp diffuseColor to light bands
 	if (material.bands > 1.0) diffuseColor = floor(diffuseColor * material.bands)/material.bands;
 	
@@ -72,7 +72,7 @@ vec3 pLightContribute(vec3 lightColor, vec3 lightPos, float attl, float attq) {
 		vec3 viewDir = normalize(-fragPos);
 		vec3 reflectDir = reflect(-lightDir, nNormal);
 		float specular = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-		specularColor = material.specularity * specular * lightColor;
+		specularColor = material.specularity * specular * lColor;
 		// clamp specularColor to light bands
 		if (material.bands > 1.0) specularColor = floor(specularColor * material.bands)/material.bands;
 	}
