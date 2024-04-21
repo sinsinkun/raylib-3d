@@ -38,6 +38,6 @@ namespace App {
       void render();
       void cleanup();
     private:
-      int _shaderLoc[11];
+      int _shaderLoc[21];
   };
 }
