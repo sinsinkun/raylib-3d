@@ -18,6 +18,7 @@ namespace App {
     float bands = 0.0f;
   };
 
+  /// @brief Model with basic shading properties applied
   class ShadedModel {
     public:
       // assets
