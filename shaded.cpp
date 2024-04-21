@@ -5,9 +5,10 @@
 
 using namespace App;
 
-void ShadedModel::init(Model m, Shader s) {
+void ShadedModel::init(Model m, Vector3 position, Material mat) {
   model = m;
-  shader = s;
+  pos = position;
+  shader = LoadShader("assets/basic.vs", "assets/basic.fs");
   model.materials[0].shader = shader;
   
   // setup shader variable references
@@ -16,7 +17,19 @@ void ShadedModel::init(Model m, Shader s) {
   _shaderLoc[2] = GetShaderLocation(shader, "projection");
   _shaderLoc[3] = GetShaderLocation(shader, "lightColor");
   _shaderLoc[4] = GetShaderLocation(shader, "lightPos");
-  _shaderLoc[5] = GetShaderLocation(shader, "albedo");
+  _shaderLoc[5] = GetShaderLocation(shader, "material.albedo");
+  _shaderLoc[6] = GetShaderLocation(shader, "material.ambience");
+  _shaderLoc[7] = GetShaderLocation(shader, "material.specularity");
+  _shaderLoc[8] = GetShaderLocation(shader, "material.shininess");
+  _shaderLoc[9] = GetShaderLocation(shader, "material.bands");
+
+  // setup material properties
+  float nalbedo[3] = { (float)mat.albedo.r / 255, (float)mat.albedo.g / 255, (float)mat.albedo.b / 255 };
+  SetShaderValue(shader, _shaderLoc[5], nalbedo, SHADER_UNIFORM_VEC3);
+  SetShaderValue(shader, _shaderLoc[6], &mat.ambience, SHADER_UNIFORM_FLOAT);
+  SetShaderValue(shader, _shaderLoc[7], &mat.specularity, SHADER_UNIFORM_FLOAT);
+  SetShaderValue(shader, _shaderLoc[8], &mat.shininess, SHADER_UNIFORM_FLOAT);
+  SetShaderValue(shader, _shaderLoc[9], &mat.bands, SHADER_UNIFORM_FLOAT);
 }
 
 void ShadedModel::updateModel(Vector3 dp, Vector3 dr) {
@@ -46,10 +59,8 @@ void ShadedModel::updateShader(const Camera& camera, int screenW, int screenH, f
   // update fragment shader
   float nlightc[3] = { (float)lightC.r / 255, (float)lightC.g / 255, (float)lightC.b / 255 };
   float nlightd[3] = { lightP.x, lightP.y, lightP.z};
-  float nalbedo[3] = { (float)albedo.r / 255, (float)albedo.g / 255, (float)albedo.b / 255 };
   SetShaderValue(shader, _shaderLoc[3], nlightc, SHADER_UNIFORM_VEC3);
   SetShaderValue(shader, _shaderLoc[4], nlightd, SHADER_UNIFORM_VEC3);
-  SetShaderValue(shader, _shaderLoc[5], nalbedo, SHADER_UNIFORM_VEC3);
 }
 
 void ShadedModel::render() {

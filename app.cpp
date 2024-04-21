@@ -28,31 +28,25 @@ void EventLoop::init() {
   // initialize shadeded asset
   Asset a1 = { Asset_ShadedModel };
   a1.sm = new ShadedModel;
-  Model m = LoadModelFromMesh(GenMeshCone(2.0f, 2.0f, 40));
-  Shader s = LoadShader("assets/lighting.vs", "assets/lighting.fs");
-  a1.sm->pos = (Vector3){0.0f, 2.0f, 0.0f};
-  a1.sm->albedo = {255, 140, 140};
-  a1.sm->init(m, s);
+  Model m1 = LoadModelFromMesh(GenMeshCone(2.0f, 2.0f, 40));
+  Material mat1 = {(Color){255, 140, 140}, 0.2f, 0.5f, 16.0f, 0.0f};
+  a1.sm->init(m1, (Vector3){0.0f, 2.0f, 0.0f}, mat1);
   assets.push_back(a1);
 
   // asset 2
   Asset a2 = { Asset_ShadedModel };
   a2.sm = new ShadedModel;
   Model m2 = LoadModelFromMesh(GenMeshCube(2.0f, 2.0f, 2.0f));
-  Shader s2 = LoadShader("assets/lighting.vs", "assets/lighting.fs");
-  a2.sm->pos = (Vector3){0.0f, 2.0f, 5.0f};
-  a2.sm->albedo = {140, 200, 150};
-  a2.sm->init(m2, s2);
+  Material mat2 = {(Color){140, 200, 150}, 0.5f, 0.5f, 2.0f, 12.0f};
+  a2.sm->init(m2, (Vector3){0.0f, 2.0f, 5.0f}, mat2);
   assets.push_back(a2);
 
   // asset 3
   Asset a3 = { Asset_ShadedModel };
   a3.sm = new ShadedModel;
   Model m3 = LoadModelFromMesh(GenMeshSphere(2.0f, 40, 40));
-  Shader s3 = LoadShader("assets/lighting.vs", "assets/lighting.fs");
-  a3.sm->pos = (Vector3){0.0f, 2.0f, -5.0f};
-  a3.sm->albedo = {140, 120, 255};
-  a3.sm->init(m3, s3);
+  Material mat3 = {(Color){140, 120, 255}, 0.0f, 0.5f, 64.0f, 6.0f};
+  a3.sm->init(m3, (Vector3){0.0f, 2.0f, -5.0f}, mat3);
   assets.push_back(a3);
 
   // post process shader
