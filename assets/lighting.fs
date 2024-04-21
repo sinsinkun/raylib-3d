@@ -24,7 +24,7 @@ void main() {
 	float diffuse = max(dot(nNormal, lightDir), 0.0);
 	vec3 diffuseColor = diffuse * lightColor;
 	// clamp diffuseColor to light bands
-	// diffuseColor = floor(diffuseColor * 6)/6;
+	diffuseColor = floor(diffuseColor * 4)/4;
 
 	// calculate specular color
 	float specularStr = 0.5;
@@ -33,7 +33,7 @@ void main() {
 	float specular = pow(max(dot(viewDir, reflectDir), 0.0), 8);
 	vec3 specularColor = specularStr * specular * lightColor;
 	// clamp specularColor to light bands
-	// specularColor = floor(specularColor * 6)/6;
+	specularColor = floor(specularColor * 6)/6;
 
 	// combine colors
 	vec3 outColor = (ambience + diffuseColor + specularColor) * albedo;

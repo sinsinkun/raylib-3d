@@ -1,8 +1,8 @@
-# Code Guesser
+# 3D Test
 
-Simple raylib test project (basic UI). The main goal of this project was to create a standalone
-exe with no external dependencies. The game is simple. Guess the correct code. The color of
-the input field changes based on how many correct numbers there are (in the correct position).
+Simple raylib test project (basic 3D). The main goal of this project was to implement custom shader
+elements to properly emulate shade depth. This serves not only to expand my knowledge in raylib 3D
+rendering, but also GLSL and graphics processing.
 
 <img src="assets/screenshot.png" alt="screenshot" height="500" />
 
