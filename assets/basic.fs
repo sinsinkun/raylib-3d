@@ -8,13 +8,6 @@ struct Material {
 	float bands;
 };
 
-struct Light {
-	vec3 position;
-	vec3 ambienti;
-	vec3 diffusei;
-	vec3 speculari;
-};
-
 // Input attributes (from vertex shader)
 in vec3 fragColor;
 in vec3 fragNormal;
