@@ -44,5 +44,8 @@ namespace App {
     private:
       void _updateSystem();
       void _drawFps();
+      void _preRender();
+      void _addBloom();
+      void _debugRender();
   };
 }

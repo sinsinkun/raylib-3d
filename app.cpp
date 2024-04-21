@@ -58,7 +58,10 @@ void EventLoop::init() {
   // post process shader
   intensityShader = LoadShader(0, "assets/intensityFilter.fs");
   blurShader = LoadShader(0, "assets/blur.fs");
+  preTexture = LoadRenderTexture(800, 600);
+  SetTextureWrap(preTexture.texture, TEXTURE_WRAP_CLAMP);
   lightTexture = LoadRenderTexture(800, 600);
+  SetTextureWrap(lightTexture.texture, TEXTURE_WRAP_CLAMP);
 }
 
 void EventLoop::update() {
@@ -92,8 +95,10 @@ void EventLoop::update() {
   if (preTexture.texture.width != screenW || preTexture.texture.height != screenH) {
     UnloadRenderTexture(preTexture);
     preTexture = LoadRenderTexture(screenW, screenH);
+    SetTextureWrap(preTexture.texture, TEXTURE_WRAP_CLAMP);
     UnloadRenderTexture(lightTexture);
     lightTexture = LoadRenderTexture(screenW, screenH);
+    SetTextureWrap(lightTexture.texture, TEXTURE_WRAP_CLAMP);
   }
 
   // update assets
@@ -121,52 +126,10 @@ void EventLoop::update() {
 }
 
 void EventLoop::render() {
-  // pre-process render
-  BeginTextureMode(preTexture);
-    ClearBackground(BG_CLEAR);
-    
-    BeginMode3D(camera);
-      // draw assets
-      for (Asset a: assets) {
-        switch (a.type) {
-          case Asset_ShadedModel:
-            a.sm->render();
-            break;
-          case Asset_None:
-          default:
-            break;
-        }
-      }
-      // Debug
-      DrawSphere(lightPos, 0.1f, WHITE);
-      // DrawGrid(10, 1.0f);
-    EndMode3D();
-  EndTextureMode();
-
-  // filter out only lights
-  BeginTextureMode(lightTexture);
-    BeginShaderMode(intensityShader);
-      DrawTextureRec(
-        preTexture.texture, 
-        (Rectangle){0, 0, (float)preTexture.texture.width, (float)-preTexture.texture.height},
-        (Vector2){0, 0},
-        WHITE
-      );
-    EndShaderMode();
-  EndTextureMode();
-
-  // blur lights
-  BeginTextureMode(lightTexture);
-    BeginShaderMode(blurShader);
-      DrawTextureRec(
-        lightTexture.texture, 
-        (Rectangle){0, 0, (float)lightTexture.texture.width, (float)-lightTexture.texture.height},
-        (Vector2){0, 0},
-        WHITE
-      );
-    EndShaderMode();
-  EndTextureMode();
-
+  // pre-processing
+  _preRender();
+  _addBloom();
+  // make render
   BeginDrawing();
     ClearBackground(BLACK);
     // draw post processed texture
@@ -185,6 +148,8 @@ void EventLoop::render() {
         WHITE
       );
     EndBlendMode();
+    // debug textures
+    _debugRender();
     // draw FPS overlay
     _drawFps();
   EndDrawing();
@@ -220,9 +185,79 @@ void EventLoop::_updateSystem() {
   deltaTime = GetFrameTime();
 }
 
+#pragma region Render Helpers
 void EventLoop::_drawFps() {
   std::string fpst = std::to_string(fps);
   std::string fpstxt = "FPS: ";
   fpstxt.append(fpst);
   DrawTextEx(font, fpstxt.c_str(), (Vector2){2.0, 2.0}, 20, 0, GREEN);
 }
+
+void EventLoop::_preRender() {
+  BeginTextureMode(preTexture);
+    ClearBackground(BG_CLEAR);
+    
+    BeginMode3D(camera);
+      // draw assets
+      for (Asset a: assets) {
+        switch (a.type) {
+          case Asset_ShadedModel:
+            a.sm->render();
+            break;
+          case Asset_None:
+          default:
+            break;
+        }
+      }
+      // Debug
+      DrawSphere(lightPos, 0.1f, WHITE);
+      // DrawGrid(10, 1.0f);
+    EndMode3D();
+  EndTextureMode();
+}
+
+void EventLoop::_addBloom() {
+  // filter out high intensity areas
+  BeginTextureMode(lightTexture);
+    BeginShaderMode(intensityShader);
+      DrawTextureRec(
+        preTexture.texture, 
+        (Rectangle){0, 0, (float)preTexture.texture.width, (float)-preTexture.texture.height},
+        (Vector2){0, 0},
+        WHITE
+      );
+    EndShaderMode();
+  EndTextureMode();
+
+  // blur intensity
+  BeginTextureMode(lightTexture);
+    BeginShaderMode(blurShader);
+      DrawTextureRec(
+        lightTexture.texture, 
+        (Rectangle){0, 0, (float)lightTexture.texture.width, (float)-lightTexture.texture.height},
+        (Vector2){0, 0},
+        WHITE
+      );
+    EndShaderMode();
+  EndTextureMode();
+}
+
+void EventLoop::_debugRender() {
+  DrawTexturePro(
+    preTexture.texture, 
+    (Rectangle){0, 0, (float)preTexture.texture.width, (float)-preTexture.texture.height},
+    (Rectangle){0, 0, (float)screenW/4, (float)screenH/4},
+    (Vector2){0, 0},
+    0,
+    WHITE
+  );
+  DrawTexturePro(
+    lightTexture.texture, 
+    (Rectangle){0, 0, (float)lightTexture.texture.width, (float)-lightTexture.texture.height},
+    (Rectangle){0, (float)screenH/4, (float)screenW/4, (float)screenH/4},
+    (Vector2){0, 0},
+    0,
+    WHITE
+  );
+}
+#pragma endregion Render Helpers
