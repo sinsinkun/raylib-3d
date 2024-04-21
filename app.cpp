@@ -28,16 +28,16 @@ void EventLoop::init() {
   // initialize shadeded asset
   Asset a1 = { Asset_ShadedModel };
   a1.sm = new ShadedModel;
-  Model m1 = LoadModelFromMesh(GenMeshCone(2.0f, 2.0f, 40));
-  Material mat1 = {(Color){255, 140, 140}, 0.2f, 0.5f, 16.0f, 0.0f};
+  Model m1 = LoadModelFromMesh(GenMeshCube(2.0f, 2.0f, 2.0f));
+  Material mat1 = {(Color){255, 140, 140}, 0.2f, 1.0f, 0.8f, 16.0f, 0.0f};
   a1.sm->init(m1, (Vector3){0.0f, 2.0f, 0.0f}, mat1);
   assets.push_back(a1);
 
   // asset 2
   Asset a2 = { Asset_ShadedModel };
   a2.sm = new ShadedModel;
-  Model m2 = LoadModelFromMesh(GenMeshCube(2.0f, 2.0f, 2.0f));
-  Material mat2 = {(Color){140, 200, 150}, 0.5f, 0.5f, 2.0f, 12.0f};
+  Model m2 = LoadModelFromMesh(GenMeshSphere(2.0f, 40, 40));
+  Material mat2 = {(Color){140, 200, 150}, 0.2f, 1.0f, 0.5f, 64.0f, 0.0f};
   a2.sm->init(m2, (Vector3){0.0f, 2.0f, 5.0f}, mat2);
   assets.push_back(a2);
 
@@ -45,7 +45,7 @@ void EventLoop::init() {
   Asset a3 = { Asset_ShadedModel };
   a3.sm = new ShadedModel;
   Model m3 = LoadModelFromMesh(GenMeshSphere(2.0f, 40, 40));
-  Material mat3 = {(Color){140, 120, 255}, 0.0f, 0.5f, 64.0f, 6.0f};
+  Material mat3 = {(Color){140, 120, 255}, 0.4f, 0.8f, 0.5f, 64.0f, 0.0f};
   a3.sm->init(m3, (Vector3){0.0f, 2.0f, -5.0f}, mat3);
   assets.push_back(a3);
 
@@ -82,7 +82,11 @@ void EventLoop::update() {
 
   // update lights
   if (!paused) {
-    lightPos = {5.0f * (float)std::sin(elapsed), 6.0f, 5.0f * (float)std::cos(elapsed)};
+    lightAngle += ftime;
+    lightPos = {5.0f * (float)std::sin(lightAngle), 6.0f, 5.0f * (float)std::cos(lightAngle)};
+    int dcolor = 150 + 50 * std::sin(lightAngle);
+    int dcolor2 = 200 - 50 * std::cos(lightAngle);
+    lightColor = {(unsigned char)dcolor, 250, (unsigned char)dcolor2};
   }
 
   // update post processor
@@ -99,7 +103,7 @@ void EventLoop::update() {
   for (Asset a: assets) {
     switch (a.type) {
       case Asset_ShadedModel:
-        a.sm->updateModel((Vector3){0.0f, 0.0f, 0.0f}, (Vector3){0.0f, ftime * -12.0f, 0.0f}, lightPos);
+        a.sm->updateModel((Vector3){0.0f, 0.0f, 0.0f}, (Vector3){0.0f, ftime * -12.0f, 0.0f}, lightPos, lightColor);
         a.sm->updateShader(camera, screenW, screenH, camera.fovy);
         break;
       case Asset_None:
@@ -137,7 +141,7 @@ void EventLoop::render() {
       );
     EndBlendMode();
     // debug textures
-    _debugRender();
+    // _debugRender();
     // draw FPS overlay
     _drawFps();
   EndDrawing();
@@ -207,6 +211,7 @@ void EventLoop::_preRender() {
 void EventLoop::_addBloom() {
   // filter out high intensity areas
   BeginTextureMode(lightTexture);
+    ClearBackground(BLACK);
     BeginShaderMode(intensityShader);
       DrawTextureRec(
         preTexture.texture, 

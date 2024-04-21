@@ -8,7 +8,7 @@ using namespace App;
 void ShadedModel::init(Model m, Vector3 position, Material mat) {
   model = m;
   pos = position;
-  shader = LoadShader("assets/basic.vs", "assets/basic.fs");
+  shader = LoadShader("assets/phong.vs", "assets/phong.fs");
   model.materials[0].shader = shader;
   
   // setup shader variable references
@@ -22,6 +22,7 @@ void ShadedModel::init(Model m, Vector3 position, Material mat) {
   _shaderLoc[7] = GetShaderLocation(shader, "material.specularity");
   _shaderLoc[8] = GetShaderLocation(shader, "material.shininess");
   _shaderLoc[9] = GetShaderLocation(shader, "material.bands");
+  _shaderLoc[10] = GetShaderLocation(shader, "material.diffusivity");
 
   // setup material properties
   float nalbedo[3] = { (float)mat.albedo.r / 255, (float)mat.albedo.g / 255, (float)mat.albedo.b / 255 };
@@ -30,6 +31,7 @@ void ShadedModel::init(Model m, Vector3 position, Material mat) {
   SetShaderValue(shader, _shaderLoc[7], &mat.specularity, SHADER_UNIFORM_FLOAT);
   SetShaderValue(shader, _shaderLoc[8], &mat.shininess, SHADER_UNIFORM_FLOAT);
   SetShaderValue(shader, _shaderLoc[9], &mat.bands, SHADER_UNIFORM_FLOAT);
+  SetShaderValue(shader, _shaderLoc[10], &mat.diffusivity, SHADER_UNIFORM_FLOAT);
 }
 
 void ShadedModel::updateModel(Vector3 dp, Vector3 dr) {
@@ -37,10 +39,11 @@ void ShadedModel::updateModel(Vector3 dp, Vector3 dr) {
   rot = Vector3Add(rot, dr);
 }
 
-void ShadedModel::updateModel(Vector3 dp, Vector3 dr, Vector3 ld) {
+void ShadedModel::updateModel(Vector3 dp, Vector3 dr, Vector3 ld, Color lc) {
   pos = Vector3Add(pos, dp);
   rot = Vector3Add(rot, dr);
   lightP = ld;
+  lightC = lc;
 }
 
 void ShadedModel::updateShader(const Camera& camera, int screenW, int screenH, float fovY) {

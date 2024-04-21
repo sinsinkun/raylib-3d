@@ -7,12 +7,14 @@ namespace App {
   /// @brief Define material properties for model
   /// @param albedo base color of material
   /// @param ambience Ambient brightness (0.0 - 1.0)
+  /// @param diffusivity Diffusion strength/"smoothness" (0.0 - 1.0)
   /// @param specularity Strength of specular reflection (0.0 - 1.0)
   /// @param shininess Reflectiveness of surface (power of 2)
   /// @param bands Number of bands to divide shades into (0 or 2+)
   struct Material {
     Color albedo = {100, 100, 100};
     float ambience = 0.2f;
+    float diffusivity = 1.0f;
     float specularity = 0.5f;
     float shininess = 32.0f;
     float bands = 0.0f;
@@ -31,11 +33,11 @@ namespace App {
       // methods
       void init(Model model, Vector3 position, Material material);
       void updateModel(Vector3 dposition, Vector3 drotation);
-      void updateModel(Vector3 dposition, Vector3 drotation, Vector3 lightDir);
+      void updateModel(Vector3 dposition, Vector3 drotation, Vector3 lightDir, Color lightColor);
       void updateShader(const Camera& camera, int screenW, int screenH, float fovY);
       void render();
       void cleanup();
     private:
-      int _shaderLoc[10];
+      int _shaderLoc[11];
   };
 }

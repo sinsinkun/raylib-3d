@@ -14,5 +14,7 @@ out vec4 finalColor;
 void main() {
   // Texel color fetching from texture sampler
   vec4 baseColor = texture(texture0, fragTexCoord);
-  finalColor = step(vec4(0.95), baseColor);
+  // use this for average RGB intensity filter
+  // float influence = step(0.95, (baseColor.r + baseColor.g + baseColor.b) / 3);
+  finalColor = step(0.95, baseColor);
 }
