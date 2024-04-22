@@ -1,6 +1,7 @@
 #include <vector>
 #include <raylib.h>
 #include "shaded.hpp"
+#include "light.hpp"
 
 namespace App {
   const Color BG_CLEAR = {20, 20, 40, 255};
@@ -31,9 +32,8 @@ namespace App {
       Camera camera = { 0 }; //3D camera
       Font font;
       std::vector<Asset> assets;
+      std::vector<Light> lights;
       float lightAngle = 0.0f;
-      Vector3 lightPos = {5.0f, 10.0f, 0.0f};
-      Color lightColor = {250, 250, 250};
       Shader blurShader;
       Shader intensityShader;
       RenderTexture2D preTexture;

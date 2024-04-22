@@ -1,6 +1,7 @@
 #pragma once
-
+#include <vector>
 #include <raylib.h>
+#include "light.hpp"
 
 namespace App {
 
@@ -33,11 +34,10 @@ namespace App {
       // methods
       void init(Model model, Vector3 position, Material material);
       void updateModel(Vector3 dposition, Vector3 drotation);
-      void updateModel(Vector3 dposition, Vector3 drotation, Vector3 lightDir, Color lightColor);
-      void updateShader(const Camera& camera, int screenW, int screenH, float fovY);
+      void updateShader(const Camera& camera, int screenW, int screenH, std::vector<Light>& lights);
       void render();
       void cleanup();
     private:
-      int _shaderLoc[21];
+      int _shaderLoc[29];
   };
 }

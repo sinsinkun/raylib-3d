@@ -6,6 +6,7 @@
 #include "app.hpp"
 #include "util.hpp"
 #include "shaded.hpp"
+#include "light.hpp"
 
 #define GLSL_VERSION 330
 
@@ -56,6 +57,14 @@ void EventLoop::init() {
   SetTextureWrap(preTexture.texture, TEXTURE_WRAP_CLAMP);
   lightTexture = LoadRenderTexture(800, 600);
   SetTextureWrap(lightTexture.texture, TEXTURE_WRAP_CLAMP);
+
+  // lights
+  Light light1 = {1, Light_Directional, (Vector3){0.0f, -5.0f, 5.0f}, (Color){255, 255, 200, 255}, 0.4f};
+  lights.push_back(light1);
+  Light light2 = {2, Light_Point, (Vector3){0.0f, 6.0f, 5.0f}, (Color){100, 100, 255, 255}, 40.0f, true};
+  lights.push_back(light2);
+  Light light3 = {3, Light_Point, (Vector3){0.0f, 6.0f, -5.0f}, (Color){100, 255, 100, 255}, 10.0f, true};
+  lights.push_back(light3);
 }
 
 void EventLoop::update() {
@@ -80,15 +89,6 @@ void EventLoop::update() {
   // toggle rotation
   if (IsKeyPressed(KEY_SPACE)) paused = !paused;
 
-  // update lights
-  if (!paused) {
-    lightAngle += ftime;
-    lightPos = {5.0f * (float)std::sin(lightAngle), 6.0f, 5.0f * (float)std::cos(lightAngle)};
-    int dcolor = 150 + 50 * std::sin(lightAngle);
-    int dcolor2 = 200 - 50 * std::cos(lightAngle);
-    lightColor = {(unsigned char)dcolor, 250, (unsigned char)dcolor2};
-  }
-
   // update post processor
   if (preTexture.texture.width != screenW || preTexture.texture.height != screenH) {
     UnloadRenderTexture(preTexture);
@@ -103,10 +103,28 @@ void EventLoop::update() {
   for (Asset a: assets) {
     switch (a.type) {
       case Asset_ShadedModel:
-        a.sm->updateModel((Vector3){0.0f, 0.0f, 0.0f}, (Vector3){0.0f, ftime * -12.0f, 0.0f}, lightPos, lightColor);
-        a.sm->updateShader(camera, screenW, screenH, camera.fovy);
+        a.sm->updateModel((Vector3){0.0f, 0.0f, 0.0f}, (Vector3){0.0f, ftime * -12.0f, 0.0f});
+        a.sm->updateShader(camera, screenW, screenH, lights);
         break;
       case Asset_None:
+      default:
+        break;
+    }
+  }
+
+  // update lights
+  for (Light &l: lights) {
+    switch (l.type) {
+      case Light_Point:
+        if (!paused) {
+          lightAngle += ftime;
+          l.update((Vector3){
+            2.0f * (float)l.id * (float)std::sin((float)std::sqrt(l.id) * lightAngle), 
+            4.0f + 2.0f * (float)l.id, 
+            2.0f * (float)l.id * (float)std::cos((float)std::sqrt(l.id) * lightAngle)
+          });
+        }
+        break;
       default:
         break;
     }
@@ -148,6 +166,10 @@ void EventLoop::render() {
 }
 
 void EventLoop::cleanup() {
+  // destroy lights
+  for (Light l: lights) {
+    l.cleanup();
+  }
   // destroy assets
   for (Asset a: assets) {
     switch (a.type) {
@@ -201,9 +223,10 @@ void EventLoop::_preRender() {
             break;
         }
       }
-      // Debug
-      DrawSphere(lightPos, 0.1f, WHITE);
-      // DrawGrid(10, 1.0f);
+      // draw lights
+      for (Light l: lights) {
+        l.render();
+      }
     EndMode3D();
   EndTextureMode();
 }
@@ -212,14 +235,12 @@ void EventLoop::_addBloom() {
   // filter out high intensity areas
   BeginTextureMode(lightTexture);
     ClearBackground(BLACK);
-    BeginShaderMode(intensityShader);
-      DrawTextureRec(
-        preTexture.texture, 
-        (Rectangle){0, 0, (float)preTexture.texture.width, (float)-preTexture.texture.height},
-        (Vector2){0, 0},
-        WHITE
-      );
-    EndShaderMode();
+    BeginMode3D(camera);
+      // draw lights
+      for (Light l: lights) {
+        l.render();
+      }
+    EndMode3D();
   EndTextureMode();
 
   // blur intensity

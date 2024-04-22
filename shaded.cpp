@@ -22,17 +22,25 @@ void ShadedModel::init(Model m, Vector3 position, Material mat) {
   _shaderLoc[7] = GetShaderLocation(shader, "material.shininess");
   _shaderLoc[8] = GetShaderLocation(shader, "material.bands");
   _shaderLoc[9] = GetShaderLocation(shader, "material.diffusivity");
-  _shaderLoc[10] = GetShaderLocation(shader, "light1.color");
-  _shaderLoc[11] = GetShaderLocation(shader, "light1.position");
-  _shaderLoc[12] = GetShaderLocation(shader, "light1.attL");
-  _shaderLoc[13] = GetShaderLocation(shader, "light1.attQ");
-  _shaderLoc[14] = GetShaderLocation(shader, "light2.color");
-  _shaderLoc[15] = GetShaderLocation(shader, "light2.position");
-  _shaderLoc[16] = GetShaderLocation(shader, "light2.attL");
-  _shaderLoc[17] = GetShaderLocation(shader, "light2.attQ");
-  _shaderLoc[18] = GetShaderLocation(shader, "light0.color");
-  _shaderLoc[19] = GetShaderLocation(shader, "light0.direction");
-  _shaderLoc[20] = GetShaderLocation(shader, "light0.intensity");
+  _shaderLoc[10] = GetShaderLocation(shader, "light0.color");
+  _shaderLoc[11] = GetShaderLocation(shader, "light0.direction");
+  _shaderLoc[12] = GetShaderLocation(shader, "light0.intensity");
+  _shaderLoc[13] = GetShaderLocation(shader, "light1.color");
+  _shaderLoc[14] = GetShaderLocation(shader, "light1.position");
+  _shaderLoc[15] = GetShaderLocation(shader, "light1.attL");
+  _shaderLoc[16] = GetShaderLocation(shader, "light1.attQ");
+  _shaderLoc[17] = GetShaderLocation(shader, "light2.color");
+  _shaderLoc[18] = GetShaderLocation(shader, "light2.position");
+  _shaderLoc[19] = GetShaderLocation(shader, "light2.attL");
+  _shaderLoc[20] = GetShaderLocation(shader, "light2.attQ");
+  _shaderLoc[21] = GetShaderLocation(shader, "light3.color");
+  _shaderLoc[22] = GetShaderLocation(shader, "light3.position");
+  _shaderLoc[23] = GetShaderLocation(shader, "light3.attL");
+  _shaderLoc[24] = GetShaderLocation(shader, "light3.attQ");
+  _shaderLoc[25] = GetShaderLocation(shader, "light4.color");
+  _shaderLoc[26] = GetShaderLocation(shader, "light4.position");
+  _shaderLoc[27] = GetShaderLocation(shader, "light4.attL");
+  _shaderLoc[28] = GetShaderLocation(shader, "light4.attQ");
 
   // setup material properties
   float nalbedo[3] = { (float)mat.albedo.r / 255, (float)mat.albedo.g / 255, (float)mat.albedo.b / 255 };
@@ -42,14 +50,6 @@ void ShadedModel::init(Model m, Vector3 position, Material mat) {
   SetShaderValue(shader, _shaderLoc[7], &mat.shininess, SHADER_UNIFORM_FLOAT);
   SetShaderValue(shader, _shaderLoc[8], &mat.bands, SHADER_UNIFORM_FLOAT);
   SetShaderValue(shader, _shaderLoc[9], &mat.diffusivity, SHADER_UNIFORM_FLOAT);
-
-  // setup light properties
-  float attenuationL = 0.2f;
-  float attenuationQ = 0.2f;
-  SetShaderValue(shader, _shaderLoc[12], &attenuationL, SHADER_UNIFORM_FLOAT);
-  SetShaderValue(shader, _shaderLoc[13], &attenuationQ, SHADER_UNIFORM_FLOAT);
-  SetShaderValue(shader, _shaderLoc[16], &attenuationL, SHADER_UNIFORM_FLOAT);
-  SetShaderValue(shader, _shaderLoc[17], &attenuationQ, SHADER_UNIFORM_FLOAT);
 }
 
 void ShadedModel::updateModel(Vector3 dp, Vector3 dr) {
@@ -57,17 +57,10 @@ void ShadedModel::updateModel(Vector3 dp, Vector3 dr) {
   rot = Vector3Add(rot, dr);
 }
 
-void ShadedModel::updateModel(Vector3 dp, Vector3 dr, Vector3 ld, Color lc) {
-  pos = Vector3Add(pos, dp);
-  rot = Vector3Add(rot, dr);
-  lightP = ld;
-  lightC = lc;
-}
-
-void ShadedModel::updateShader(const Camera& camera, int screenW, int screenH, float fovY) {
+void ShadedModel::updateShader(const Camera& camera, int screenW, int screenH, std::vector<Light>& lights) {
   double elapsed = GetTime();
   // update vertex shader
-  float fovRad = fovY * 3.141592f / 180.0f;
+  float fovRad = camera.fovy * 3.141592f / 180.0f;
   Vector3 rotRad = {rot.x * 3.141592f / 180.0f, rot.y * 3.141592f / 180.0f, rot.z * 3.141592f / 180.0f};
   Matrix transMat = MatrixTranslate(pos.x, pos.y, pos.z);
   Matrix rotMat = MatrixRotateXYZ(rotRad);
@@ -79,14 +72,52 @@ void ShadedModel::updateShader(const Camera& camera, int screenW, int screenH, f
   SetShaderValueMatrix(shader, _shaderLoc[2], projection);
   // update fragment shader
   float viewp[3] = { camera.position.x, camera.position.y, camera.position.z };
-  float nlightc[3] = { (float)lightC.r / 255, (float)lightC.g / 255, (float)lightC.b / 255 };
-  float nlightd[3] = { lightP.x, lightP.y, lightP.z};
-  float nlightd2[3] = { -lightP.x, lightP.y, -lightP.z };
   SetShaderValue(shader, _shaderLoc[3], viewp, SHADER_UNIFORM_VEC3);
-  SetShaderValue(shader, _shaderLoc[10], nlightc, SHADER_UNIFORM_VEC3);
-  SetShaderValue(shader, _shaderLoc[11], nlightd, SHADER_UNIFORM_VEC3);
-  SetShaderValue(shader, _shaderLoc[14], nlightc, SHADER_UNIFORM_VEC3);
-  SetShaderValue(shader, _shaderLoc[15], nlightd2, SHADER_UNIFORM_VEC3);
+
+  // update lights
+  int dCount = 0, pCount = 0, sCount = 0;
+  for (Light l: lights) {
+    switch (l.type) {
+      case Light_Directional:
+        if (dCount < 1) {
+          dCount++;
+          float a[3];
+          float b[3];
+          l.shaderColor(a);
+          l.shaderDir(b);
+          SetShaderValue(shader, _shaderLoc[10], &a, SHADER_UNIFORM_VEC3);
+          SetShaderValue(shader, _shaderLoc[11], &b, SHADER_UNIFORM_VEC3);
+          SetShaderValue(shader, _shaderLoc[12], &l.intensity, SHADER_UNIFORM_FLOAT);
+        } else {
+          std::cout << "WARNING: reached maximum directional light limit" << std::endl;
+        }
+        break;
+      case Light_Point:
+        if (pCount < 4) {
+          pCount++;
+          float a[3];
+          float b[3];
+          l.shaderColor(a);
+          l.shaderPos(b);
+          SetShaderValue(shader, _shaderLoc[13 + pCount*4], &a, SHADER_UNIFORM_VEC3);
+          SetShaderValue(shader, _shaderLoc[14 + pCount*4], &b, SHADER_UNIFORM_VEC3);
+          SetShaderValue(shader, _shaderLoc[15 + pCount*4], &l.attenL, SHADER_UNIFORM_FLOAT);
+          SetShaderValue(shader, _shaderLoc[16 + pCount*4], &l.attenQ, SHADER_UNIFORM_FLOAT);
+        } else {
+          std::cout << "WARNING: reached maximum point light limit" << std::endl;
+        }
+        break;
+      case Light_Spot:
+        if (sCount < 2) {
+          sCount++;
+        } else {
+          std::cout << "WARNING: reached maximum spot light limit" << std::endl;
+        }
+        break;
+      default:
+        break;
+    }
+  }
 }
 
 void ShadedModel::render() {
