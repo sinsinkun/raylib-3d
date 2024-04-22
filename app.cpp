@@ -235,12 +235,14 @@ void EventLoop::_addBloom() {
   // filter out high intensity areas
   BeginTextureMode(lightTexture);
     ClearBackground(BLACK);
-    BeginMode3D(camera);
-      // draw lights
-      for (Light l: lights) {
-        l.render();
-      }
-    EndMode3D();
+    BeginShaderMode(intensityShader);
+      DrawTextureRec(
+        preTexture.texture, 
+        (Rectangle){0, 0, (float)preTexture.texture.width, (float)-preTexture.texture.height},
+        (Vector2){0, 0},
+        WHITE
+      );
+    EndShaderMode();
   EndTextureMode();
 
   // blur intensity
