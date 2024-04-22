@@ -30,7 +30,7 @@ void EventLoop::init() {
   Asset a1 = { Asset_ShadedModel };
   a1.sm = new ShadedModel;
   Model m1 = LoadModelFromMesh(GenMeshCube(2.0f, 2.0f, 2.0f));
-  Material mat1 = {(Color){255, 140, 140}, 0.2f, 1.0f, 0.8f, 16.0f, 0.0f};
+  Material mat1 = {(Color){255, 140, 140}, 0.2f, 1.0f, 0.8f, 16.0f, 12.0f};
   a1.sm->init(m1, (Vector3){0.0f, 2.0f, 0.0f}, mat1);
   assets.push_back(a1);
 
@@ -46,7 +46,7 @@ void EventLoop::init() {
   Asset a3 = { Asset_ShadedModel };
   a3.sm = new ShadedModel;
   Model m3 = LoadModelFromMesh(GenMeshSphere(2.0f, 40, 40));
-  Material mat3 = {(Color){140, 120, 255}, 0.4f, 0.8f, 0.5f, 64.0f, 0.0f};
+  Material mat3 = {(Color){140, 120, 255}, 0.4f, 0.4f, 0.1f, 2.0f, 0.0f};
   a3.sm->init(m3, (Vector3){0.0f, 2.0f, -5.0f}, mat3);
   assets.push_back(a3);
 
@@ -83,8 +83,14 @@ void EventLoop::update() {
     camera.position.x = nPos.x;
     camera.position.z = nPos.y;
   }
-  if (IsKeyDown(KEY_W) && camera.position.y < 25.0f) camera.position.y += 0.1f;
-  if (IsKeyDown(KEY_S) && camera.position.y > -10.0f) camera.position.y -= 0.1f;
+  if (IsKeyDown(KEY_W) && camera.position.y < 25.0f) {
+    camera.position.y += 0.1f;
+    camera.target.y = 0.0f;
+  }
+  if (IsKeyDown(KEY_S) && camera.position.y > -10.0f) {
+    camera.position.y -= 0.1f;
+    camera.target.y = 0.0f;
+  }
 
   // toggle rotation
   if (IsKeyPressed(KEY_SPACE)) paused = !paused;

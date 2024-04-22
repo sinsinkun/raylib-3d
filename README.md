@@ -4,6 +4,11 @@ Simple raylib test project (basic 3D). The main goal of this project was to impl
 elements to properly emulate shade depth. This serves not only to expand my knowledge in raylib 3D
 rendering, but also GLSL and graphics processing.
 
+Includes:
+- basic materials system
+- basic lighting system
+- basic post processing (light bloom)
+
 <img src="assets/screenshot.png" alt="screenshot" height="500" />
 
 ## Installation (with MSYS2)
